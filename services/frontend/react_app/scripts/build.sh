@@ -1,8 +1,9 @@
 #!/usr/bin/env sh
+set -eu
 
+yarn install --frozen-lockfile --non-interactive
 rm -rf "../web_assets/assets"
-
-yarn && yarn build
+yarn build
 
 
 original_file="../web_assets/index.html"
