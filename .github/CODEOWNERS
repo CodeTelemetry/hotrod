@@ -1,5 +1,12 @@
 /.github/ @ElliotGardiner
 /.codetelemetry/ @ElliotGardiner
 /scripts/ @ElliotGardiner
+/test/ @ElliotGardiner
+/package.json @ElliotGardiner
+/package-lock.json @ElliotGardiner
+/Makefile @ElliotGardiner
+/.signadot/ @ElliotGardiner
+/services/frontend/api_test.go @ElliotGardiner
+/services/location/client_test.go @ElliotGardiner
 /playwright.config.ts @ElliotGardiner
 /playwright-tests/ @ElliotGardiner

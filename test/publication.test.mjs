@@ -38,3 +38,23 @@ test("Go runner refuses empty tests, skipped integration and masked failure", t 
   assert.equal(run([{ Action: "pass", Test: "TestLocationClient" }, { Action: "skip", Test: "TestFrontendAPI" }], 0, "integration").status, 1);
   assert.equal(run([{ Action: "pass", Test: "TestLocationClient" }, { Action: "pass", Test: "TestFrontendAPI" }], 0, "integration").status, 0);
 });
+
+test("enforcement policy cannot waive or trade away required validation", () => {
+  const gate = JSON.parse(fs.readFileSync(".codetelemetry/gate.json"));
+  assert.deepEqual(gate, { enabled: true, minScore: 100, missingScore: "fail", complexityAware: false, requireTestBeforePush: true });
+  const { checks } = JSON.parse(fs.readFileSync(".codetelemetry/grader.json"));
+  assert.deepEqual(checks.map(c => c.id).sort(), ["hotrod.build", "hotrod.e2e", "hotrod.integration", "hotrod.lint", "hotrod.signadot", "hotrod.unit"]);
+  for (const check of checks) {
+    assert.equal(check.enabled, true);
+    assert.equal(check.beforePush, true);
+    assert.equal(check.repositoryId, "hotrod");
+    assert.equal(check.weight, 1);
+    assert.equal(check.applicabilityRule, undefined);
+    assert.equal(check.environment, undefined);
+    assert.notEqual(check.satisfactionMode, "observed");
+  }
+  const linked = checks.find(c => c.id === "hotrod.signadot");
+  assert.equal(linked.linkage, "signadot");
+  assert.equal(linked.components.length, 3);
+  assert(linked.components.every(c => c.requireSuccess === true));
+});
