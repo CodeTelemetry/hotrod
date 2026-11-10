@@ -58,3 +58,24 @@ test("enforcement policy cannot waive or trade away required validation", () => 
   assert.equal(linked.components.length, 3);
   assert(linked.components.every(c => c.requireSuccess === true));
 });
+
+
+test("the default-branch gate rejects old/malformed/relaxed success responses", () => {
+  const workflow = fs.readFileSync(".github/workflows/codetelemetry-pr-gate.yml", "utf8");
+  assert.match(workflow, /CODETELEMETRY_ENFORCEMENT_APPROVED/);
+  const fence = workflow.match(/# BEGIN SOURCE IMAGE FENCE\n([\s\S]*?)# END SOURCE IMAGE FENCE/)[1];
+  const head = "a".repeat(40);
+  const valid = { state: "success", enforced: true, reason: "score_meets_threshold", score: 100, threshold: 100,
+    binding: { protocol: "source-image-v1", headSha: head, policyVersion: 1, policyDigest: "b".repeat(64), image: `ghcr.io/example/app@sha256:${"c".repeat(64)}`, validationImage: `ghcr.io/example/tests@sha256:${"d".repeat(64)}` } };
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "hotrod-gate-"));
+  try {
+    const out = path.join(tmp, "answer.json");
+    const run = answer => {
+      fs.writeFileSync(out, JSON.stringify(answer));
+      return spawnSync("bash", ["-c", fence], { env: { ...process.env, HEAD_SHA: head, out }, encoding: "utf8" }).status;
+    };
+    assert.equal(run(valid), 0);
+    for (const patch of [{ enforced: false }, { score: 99 }, { threshold: 70 }, { reason: "trivial_waived" }, { binding: undefined },
+      ...[{ headSha: "e".repeat(40) }, { protocol: "old" }, { policyDigest: "wrong" }, { image: "ghcr.io/example/app:latest" }, { validationImage: null }].map(p => ({ binding: { ...valid.binding, ...p } }))]) assert.notEqual(run({ ...valid, ...patch }), 0);
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});

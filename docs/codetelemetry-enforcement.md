@@ -101,3 +101,27 @@ for a new head.
 
 References: [GitHub Actions execution policies](https://docs.github.com/en/actions/how-tos/administer/control-workflow-execution),
 [Signadot sandbox specification](https://www.signadot.com/docs/reference/sandboxes/spec).
+
+## Source and image binding rollout
+
+Keep the gate workflow disabled until live acceptance and adversarial review
+pass. The workflow additionally requires the repository variable
+`CODETELEMETRY_ENFORCEMENT_APPROVED=source-image-v1`; leave it absent during rollout.
+A successful response must enforce 100/100 and include protocol `source-image-v1`,
+the exact PR head, the current policy digest/version, and immutable application
+and validation image references. Older or relaxed responses fail closed.
+
+Commit source changes before recording validation. From the same explicit
+checkout directory, run standalone `git rev-parse HEAD` and
+`git status --porcelain --untracked-files=all --branch` before the complete six-check
+chain, then repeat both commands afterwards and push. Both status outputs must
+be captured completely and contain only the `##` branch header (no file rows). Any later possible shell write requires
+rerunning the entire chain; failed writes can still modify files.
+
+An independent trusted validation producer must build the exact PR head and
+validate its immutable application image in a fresh isolated sandbox using the
+matching immutable test image. Session telemetry and mutable image tags alone
+cannot supply that proof. A current trusted receipt must cover the exact policy
+and head. Verify a real passing PR and controlled failures, including changed
+head/image/policy and late shell edits, before enabling the workflow or requiring
+it for merges. Maintain owner review of executable tests and policy changes.

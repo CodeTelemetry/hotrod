@@ -49,12 +49,17 @@ jobs:
       - name: Ask CodeTelemetry for the verdict
         env:
           CODETELEMETRY_URL: "https://codetelemetry.com"
+          CODETELEMETRY_ENFORCEMENT_APPROVED: ${{ vars.CODETELEMETRY_ENFORCEMENT_APPROVED }}
           CODETELEMETRY_GATE: ${{ vars.CODETELEMETRY_GATE_ID }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
           set -uo pipefail
+          if [ "${CODETELEMETRY_ENFORCEMENT_APPROVED:-}" != "source-image-v1" ]; then
+            echo "::error::Keep this workflow disabled until the source/image rollout passes live acceptance and adversarial review."
+            exit 1
+          fi
           if [ -z "$CODETELEMETRY_GATE" ]; then
             echo "::error::Configure this repository's dedicated CodeTelemetry gate before enabling merges."
             exit 1
@@ -114,6 +119,20 @@ jobs:
                   if [ -n "$details" ]; then echo; echo "[Open the deciding session]($details)"; fi
                 } >> "$GITHUB_STEP_SUMMARY"
                 if [ "$state" = "success" ]; then
+                  # BEGIN SOURCE IMAGE FENCE
+                  if ! jq -e --arg head "$HEAD_SHA" '
+                    .enforced == true and .score == 100 and .threshold == 100 and
+                    .reason == "score_meets_threshold" and
+                    .binding.protocol == "source-image-v1" and .binding.headSha == $head and
+                    (.binding.policyVersion | type == "number" and . >= 1 and floor == .) and
+                    (.binding.policyDigest | type == "string" and test("^[a-f0-9]{64}$")) and
+                    (.binding.image | type == "string" and test("^[a-z0-9][a-z0-9._:/-]*@sha256:[a-f0-9]{64}$")) and
+                    (.binding.validationImage | type == "string" and test("^[a-z0-9][a-z0-9._:/-]*@sha256:[a-f0-9]{64}$"))
+                  ' "$out" >/dev/null; then
+                    echo "::error::Strict Hotrod validation lacks current commit, policy and immutable image proof."
+                    exit 1
+                  fi
+                  # END SOURCE IMAGE FENCE
                   echo "$message"
                   exit 0
                 fi
