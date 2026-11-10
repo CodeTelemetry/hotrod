@@ -125,3 +125,19 @@ cannot supply that proof. A current trusted receipt must cover the exact policy
 and head. Verify a real passing PR and controlled failures, including changed
 head/image/policy and late shell edits, before enabling the workflow or requiring
 it for merges. Maintain owner review of executable tests and policy changes.
+
+## Changing policy or issuer after activation
+
+GitHub retains a completed check result. Receipt expiry or server-side policy
+and issuer revocation affects the next evaluation; it does not clear an already
+green Actions job. Disabling the workflow or removing its approval variable also
+does not invalidate that completed job.
+
+Before changing the published policy or trusted issuer, pause merges to `main`
+with a temporary rule restricting branch updates. Retain the existing build and
+review protections. Publish only the reviewed configuration, then run fresh
+independent validation and rerun the gate for every open PR, including unchanged
+heads with earlier green checks. Verify each fresh result uses the current head,
+policy digest/version and immutable images before lifting the merge pause.
+Keep merges paused if any PR cannot be revalidated. This procedure is manual;
+automatic invalidation of completed GitHub checks is not implemented.
