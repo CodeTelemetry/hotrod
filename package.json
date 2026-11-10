@@ -5,7 +5,11 @@
     "cypress": "^13.11.0"
   },
   "scripts": {
+    "test:unit": "node scripts/run-go-tests.mjs unit",
+    "build": "make build",
+    "lint": "go vet ./...",
     "e2e:playwright": "playwright test ",
-    "test:integration": "bash scripts/test-integration.sh"
+    "test:integration": "node scripts/run-go-tests.mjs integration",
+    "test:harness": "node --test test/publication.test.mjs"
   }
 }

@@ -19,14 +19,17 @@ jobs:
           go-version-file: go.mod
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '22.22.1'
+          node-version: '24.22.1'
+      - run: npm ci --ignore-scripts
       - run: npm install --global yarn@1.22.22
+      - name: Publication and harness checks
+        run: npm run test:harness
       - name: Rebuild frontend and Go binary from source
-        run: make build
+        run: npm run build
       - name: Unit tests
-        run: go test -count=1 -v ./...
+        run: npm run test:unit
       - name: Static checks
-        run: go vet ./...
+        run: npm run lint
       # Live integration/browser evidence is supplied by the benchmark runner
       # and assessed separately by the required CodeTelemetry validation gate.
-      # This private fixture does not publish to upstream's registry or cluster.
+      # Public CI has no registry, cluster or CodeTelemetry ingest credentials.

@@ -15,7 +15,7 @@
 # - The only permission is id-token: write.
 #
 # GitHub Actions execution policy (separate from the required-check ruleset):
-# - On 2026-11-02 GitHub enforces its default pull_request_target block for
+# - On 2026-12-02 GitHub enforces its default pull_request_target block for
 #   affected public repositories. OIDC and no-checkout do not exempt this job.
 # - In Settings > Actions > Policies, explicitly allow pull_request_target in
 #   an active event policy scoped to .github/workflows/codetelemetry-pr-gate.yml.
@@ -49,11 +49,16 @@ jobs:
       - name: Ask CodeTelemetry for the verdict
         env:
           CODETELEMETRY_URL: "https://codetelemetry.com"
-          CODETELEMETRY_GATE: "IZy3oJUWHm5y2y_kp_Tejg"
+          CODETELEMETRY_GATE: ${{ vars.CODETELEMETRY_GATE_ID }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
           set -uo pipefail
+          if [ -z "$CODETELEMETRY_GATE" ]; then
+            echo "::error::Configure this repository's dedicated CodeTelemetry gate before enabling merges."
+            exit 1
+          fi
           out="$RUNNER_TEMP/codetelemetry-gate.json"
           if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
             echo "::error::No OIDC token available. The workflow needs 'permissions: id-token: write'."
@@ -71,8 +76,8 @@ jobs:
             fi
             echo "::add-mask::$oidc"
             body=$(jq -cn --arg gate "$CODETELEMETRY_GATE" --arg sha "$HEAD_SHA" \
-              --argjson pr "$PR_NUMBER" --argjson attempt "$attempt" \
-              '{gate: $gate, pullRequest: $pr, headSha: $sha, attempt: $attempt}')
+              --argjson pr "$PR_NUMBER" --argjson attempt "$attempt" --arg head "$HEAD_REPOSITORY" \
+              '{gate: $gate, pullRequest: $pr, headSha: $sha, attempt: $attempt, headRepository: $head}')
             status=$(curl -sS --max-time 120 -o "$out" -w '%{http_code}' -X POST \
               "$CODETELEMETRY_URL/api/integrations/github/gate/check" \
               -H "Authorization: Bearer $oidc" -H "Content-Type: application/json" \
