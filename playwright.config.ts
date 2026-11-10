@@ -5,6 +5,9 @@ const baseURL = process.env.HOTROD_BASE_URL ||
   (namespace ? `http://frontend.${namespace}.svc:8080` : undefined);
 if (!baseURL) throw new Error("Set HOTROD_BASE_URL or HOTROD_NAMESPACE before running live browser tests");
 const routingKey = process.env.SIGNADOT_ROUTING_KEY;
+if (routingKey && !process.env.HOTROD_EXPECT_SANDBOX) throw new Error("Set HOTROD_EXPECT_SANDBOX for routed browser validation");
+if (process.env.HOTROD_EXPECT_SANDBOX && !routingKey) throw new Error("Set SIGNADOT_ROUTING_KEY for sandbox attribution checks");
+if (routingKey && !process.env.HOTROD_BASE_URL) throw new Error("Set the declared HOTROD_BASE_URL explicitly for recorded sandbox validation");
 
 export default defineConfig({
   testDir: "./playwright-tests",

@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "minScore": 100,
+  "missingScore": "fail",
+  "complexityAware": false,
+  "requireTestBeforePush": true
+}

@@ -1,0 +1,30 @@
+# Render explicitly with signadot sandbox apply --set name=... --set cluster=...
+# --set namespace=... --set image=ghcr.io/codetelemetry/hotrod:<tested-commit>.
+# Shared baseline services remain outside this sandbox.
+name: "@{name}"
+spec:
+  cluster: "@{cluster}"
+  description: CodeTelemetry Hotrod validation
+  defaultRouteGroup:
+    endpoints:
+      - name: frontend
+        target: "http://frontend.@{namespace}.svc:8080"
+      - name: location
+        target: "http://location.@{namespace}.svc:8081"
+  forks:
+    - forkOf:
+        kind: Deployment
+        namespace: "@{namespace}"
+        name: frontend
+      customizations:
+        images:
+          - container: hotrod
+            image: "@{image}"
+    - forkOf:
+        kind: Deployment
+        namespace: "@{namespace}"
+        name: location
+      customizations:
+        images:
+          - container: hotrod
+            image: "@{image}"

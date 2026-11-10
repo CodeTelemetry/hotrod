@@ -2,6 +2,7 @@ package location
 
 import (
 	"context"
+	"go.opentelemetry.io/otel/baggage"
 	"os"
 	"testing"
 
@@ -17,6 +18,17 @@ func TestLocationClient(t *testing.T) {
 		return
 	}
 	ctx := context.Background()
+	if key := os.Getenv("TEST_ROUTING_KEY"); key != "" {
+		member, err := baggage.NewMember("sd-routing-key", key)
+		if err != nil {
+			t.Fatal(err)
+		}
+		bag, err := baggage.New(member)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx = baggage.ContextWithBaggage(ctx, bag)
+	}
 
 	zapOptions := []zap.Option{
 		zap.AddStacktrace(zapcore.FatalLevel),

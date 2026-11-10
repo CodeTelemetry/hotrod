@@ -1,4 +1,11 @@
-# Hot R.O.D. - Rides on Demand
+# CodeTelemetry Hotrod validation fork
+
+This fork preserves the upstream Hotrod demo and adds a recorded validation
+benchmark. See [CodeTelemetry enforcement](docs/codetelemetry-enforcement.md)
+for the policy, required CI checks, sandbox procedure and activation order.
+Public CI builds and tests; it does not publish images or deploy workloads.
+
+## Hot R.O.D. - Rides on Demand
 
 This demo is based on the Jaeger HotROD demo but has 
 been modified considerably to showcase Signadot & Sandboxes.
@@ -186,11 +193,17 @@ Starts a gRPC server on port 8083.
 
 ### Release 
 
-To build and push new images, we can leverage by using the `make release`.
+Authorized maintainers can build and push images with `make release`. The
+default image repository is `ghcr.io/codetelemetry/hotrod`; set
+`IMAGE_REPOSITORY` explicitly to use another registry.
 
 For the case of releasing latest images we can do `RELEASE_TAG=latest make release`.
 Note that you can replace the `RELEASE_TAG` with the value you need.
 
 ### Considerations
 
-You have to make sure you have the rights to write in signadot/hotrod.
+Publishing requires write access to the selected image repository. Public CI
+does not invoke this target. Historical templates under `.signadot/dev` and
+`.signadot/testing` are upstream examples and are not used by this fork's CI.
+Use the parameterized CodeTelemetry sandbox template documented above for
+recorded validation.

@@ -6,6 +6,7 @@ RELEASE_OSES ?= linux
 RELEASE_ARCHES ?= amd64 arm64
 
 DOCKER ?= docker
+IMAGE_REPOSITORY ?= ghcr.io/codetelemetry/hotrod
 
 
 SHELL = /bin/bash
@@ -19,18 +20,18 @@ build-frontend-app:
 	cd services/frontend/react_app && ./scripts/build.sh
 
 dev-build-docker: build
-	$(DOCKER) build -t signadot/hotrod:latest \
+	$(DOCKER) build -t $(IMAGE_REPOSITORY):latest \
 		--platform $(GOOS)/$(GOARCH) \
 		.
 
 build-docker: build
-	$(DOCKER) build -t signadot/hotrod:$(RELEASE_TAG)-$(GOOS)-$(GOARCH) \
+	$(DOCKER) build -t $(IMAGE_REPOSITORY):$(RELEASE_TAG)-$(GOOS)-$(GOARCH) \
 		--platform $(GOOS)/$(GOARCH) \
 		--provenance false \
 		.
 
 push-docker: build-docker
-	$(DOCKER) push signadot/hotrod:$(RELEASE_TAG)-$(GOOS)-$(GOARCH)
+	$(DOCKER) push $(IMAGE_REPOSITORY):$(RELEASE_TAG)-$(GOOS)-$(GOARCH)
 
 
 build-release:
@@ -45,7 +46,7 @@ release-images.txt:
 	rm -f dist/release-images.txt
 	for os in $(RELEASE_OSES); do \
  		for arch in $(RELEASE_ARCHES); do \
-			echo signadot/hotrod:${RELEASE_TAG}-$$os-$$arch >> dist/release-images.txt; \
+			echo $(IMAGE_REPOSITORY):${RELEASE_TAG}-$$os-$$arch >> dist/release-images.txt; \
 		done; \
 	done;
 
@@ -59,11 +60,11 @@ release: build-release release-images.txt tag-release
 		done; \
 	done;
 	# Remove existing manifest if it exists to ensure a fresh state
-	$(DOCKER) manifest rm signadot/hotrod:$(RELEASE_TAG) || true
+	$(DOCKER) manifest rm $(IMAGE_REPOSITORY):$(RELEASE_TAG) || true
 	# Create a new manifest with the freshly built images
-	$(DOCKER) manifest create signadot/hotrod:$(RELEASE_TAG) \
+	$(DOCKER) manifest create $(IMAGE_REPOSITORY):$(RELEASE_TAG) \
 		$(shell cat dist/release-images.txt)
-	$(DOCKER) manifest push signadot/hotrod:$(RELEASE_TAG)
+	$(DOCKER) manifest push $(IMAGE_REPOSITORY):$(RELEASE_TAG)
 
 generate-proto:
 	protoc --go_out=. --go_opt=paths=source_relative \

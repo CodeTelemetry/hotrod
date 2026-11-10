@@ -55,6 +55,7 @@ func sendBaselineDispatch(frontendAddr string, sessionID int) (uint, error) {
 	if err != nil {
 		return 0, err
 	}
+	setTestRouting(req)
 	client := &http.Client{
 		Transport: &http.Transport{},
 	}
@@ -75,6 +76,7 @@ func getNotification(frontendAddr string, sessionID, cursor int, n *notification
 	if err != nil {
 		return err
 	}
+	setTestRouting(req)
 	client := &http.Client{Transport: &http.Transport{}}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -88,6 +90,13 @@ func getNotification(frontendAddr string, sessionID, cursor int, n *notification
 		return err
 	}
 	return nil
+}
+
+func setTestRouting(req *http.Request) {
+	if key := os.Getenv("TEST_ROUTING_KEY"); key != "" {
+		req.Header.Set("baggage", "sd-routing-key="+key)
+		req.Header.Set("tracestate", "sd-routing-key="+key)
+	}
 }
 
 func waitNotification(t *testing.T, frontendAddr, targetWorkload, sandboxName string,

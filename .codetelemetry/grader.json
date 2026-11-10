@@ -1,0 +1,162 @@
+{
+  "features": "Require all Hotrod build, unit, lint, live integration, browser and exact sandbox validation after the final edit before push. No optional applicability or environment exemptions.",
+  "checks": [
+    {
+      "enabled": true,
+      "weight": 1,
+      "satisfactionMode": "successful",
+      "minimumOccurrences": 1,
+      "aggregationMode": "once",
+      "repositoryId": "hotrod",
+      "beforePush": true,
+      "id": "hotrod.unit",
+      "name": "Hotrod unit",
+      "category": "unit_test",
+      "matcherRule": {
+        "argumentNormalization": "persisted",
+        "include": {
+          "field": "exactFingerprint",
+          "operator": "equals",
+          "value": "v1|shell|||npm|run|test:unit|"
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "weight": 1,
+      "satisfactionMode": "successful",
+      "minimumOccurrences": 1,
+      "aggregationMode": "once",
+      "repositoryId": "hotrod",
+      "beforePush": true,
+      "id": "hotrod.integration",
+      "name": "Hotrod integration",
+      "category": "integration_test",
+      "matcherRule": {
+        "argumentNormalization": "persisted",
+        "include": {
+          "field": "exactFingerprint",
+          "operator": "equals",
+          "value": "v1|shell|||npm|run|test:integration|"
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "weight": 1,
+      "satisfactionMode": "successful",
+      "minimumOccurrences": 1,
+      "aggregationMode": "once",
+      "repositoryId": "hotrod",
+      "beforePush": true,
+      "id": "hotrod.e2e",
+      "name": "Hotrod e2e",
+      "category": "end_to_end_test",
+      "matcherRule": {
+        "argumentNormalization": "persisted",
+        "include": {
+          "field": "exactFingerprint",
+          "operator": "equals",
+          "value": "v1|shell|||npm|run|e2e:playwright|"
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "weight": 1,
+      "satisfactionMode": "successful",
+      "minimumOccurrences": 1,
+      "aggregationMode": "once",
+      "repositoryId": "hotrod",
+      "beforePush": true,
+      "id": "hotrod.build",
+      "name": "Hotrod build",
+      "category": "environment_validation",
+      "matcherRule": {
+        "argumentNormalization": "persisted",
+        "include": {
+          "field": "exactFingerprint",
+          "operator": "equals",
+          "value": "v1|shell|||npm|run|build|"
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "weight": 1,
+      "satisfactionMode": "successful",
+      "minimumOccurrences": 1,
+      "aggregationMode": "once",
+      "repositoryId": "hotrod",
+      "beforePush": true,
+      "id": "hotrod.lint",
+      "name": "Hotrod lint",
+      "category": "static_analysis",
+      "matcherRule": {
+        "argumentNormalization": "persisted",
+        "include": {
+          "field": "exactFingerprint",
+          "operator": "equals",
+          "value": "v1|shell|||npm|run|lint|"
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "weight": 1,
+      "satisfactionMode": "composite",
+      "minimumOccurrences": 1,
+      "aggregationMode": "once",
+      "repositoryId": "hotrod",
+      "beforePush": true,
+      "id": "hotrod.signadot",
+      "name": "Hotrod sandbox validation",
+      "category": "environment_validation",
+      "linkage": "signadot",
+      "components": [
+        {
+          "name": "Sandbox ready",
+          "matcherRule": {
+            "include": {
+              "all": [
+                {
+                  "field": "executable",
+                  "operator": "equals",
+                  "value": "signadot"
+                },
+                {
+                  "field": "operation",
+                  "operator": "equals",
+                  "value": "sandbox"
+                }
+              ]
+            }
+          },
+          "requireSuccess": true
+        },
+        {
+          "name": "Request or test targeted it",
+          "matcherRule": {
+            "include": {
+              "field": "packageScript",
+              "operator": "equals",
+              "value": "e2e:playwright"
+            }
+          },
+          "requireSuccess": true
+        },
+        {
+          "name": "Validation succeeded",
+          "matcherRule": {
+            "include": {
+              "field": "packageScript",
+              "operator": "equals",
+              "value": "e2e:playwright"
+            }
+          },
+          "requireSuccess": true
+        }
+      ]
+    }
+  ]
+}
