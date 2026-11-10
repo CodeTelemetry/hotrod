@@ -30,10 +30,16 @@ that maintainer validation; missing evidence does not pass automatically.
    an up-to-date branch, one fresh approval, code-owner approval and no bypass
    actors. Changes to workflows, policy and test scripts require the owners in
    CODEOWNERS; configure an additional qualified owner if needed for reviews.
+   Re-enable the staging gate workflow only after its dedicated gate is ready.
+   GitHub's current plan does not support rulesets on this private staging repo.
+   Upgrade for private enforcement, or apply the ruleset as part of publication
+   before allowing merges. Checked-in JSON alone does not enforce a ruleset.
 6. Verify same-repository and external-fork PR behavior. On public repositories,
    check Actions event policies admit this no-checkout `pull_request_target`
    workflow and the intended actors. GitHub's announced default event block is
    December 2, 2026; consult the current policy UI before publication.
+   The public external-fork smoke necessarily follows the visibility change;
+   do not announce enforcement until it and both required checks pass.
 
 The checked-in gate refuses to pass while its gate ID is unset. Applying these
 files does not provision a cluster, authorize credentials, publish a policy or
