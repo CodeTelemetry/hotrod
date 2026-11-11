@@ -1,7 +1,7 @@
 {
   "name": "Hotrod required validation",
   "target": "branch",
-  "enforcement": "active",
+  "enforcement": "disabled",
   "conditions": {
     "ref_name": {
       "include": [
@@ -31,8 +31,8 @@
             "integration_id": 15368
           },
           {
-            "context": "codetelemetry/validation",
-            "integration_id": 15368
+            "context": "codetelemetry/current-validation",
+            "integration_id": "REPLACE_WITH_CODETELEMETRY_APP_ID"
           }
         ]
       }

@@ -15,7 +15,11 @@ test("public workflows cannot push images or deploy upstream workloads", () => {
   assert.match(gate, /headRepository: \$head/);
   assert.match(gate, /vars.CODETELEMETRY_GATE_ID/);
   const rules = JSON.parse(fs.readFileSync(".codetelemetry/ruleset.json"));
-  assert.deepEqual(rules.rules.find(r => r.type === "required_status_checks").parameters.required_status_checks.map(c => c.context).sort(), ["Build and unit tests", "codetelemetry/validation"]);
+  assert.equal(rules.enforcement, "disabled");
+  assert.deepEqual(rules.rules.find(r => r.type === "required_status_checks").parameters.required_status_checks, [
+    { context: "Build and unit tests", integration_id: 15368 },
+    { context: "codetelemetry/current-validation", integration_id: "REPLACE_WITH_CODETELEMETRY_APP_ID" },
+  ]);
   const review = rules.rules.find(r => r.type === "pull_request").parameters;
   assert.equal(review.require_code_owner_review, true);
   assert.equal(review.dismiss_stale_reviews_on_push, true);
@@ -65,7 +69,7 @@ test("the default-branch gate rejects old/malformed/relaxed success responses", 
   assert.match(workflow, /CODETELEMETRY_ENFORCEMENT_APPROVED/);
   const fence = workflow.match(/# BEGIN SOURCE IMAGE FENCE\n([\s\S]*?)# END SOURCE IMAGE FENCE/)[1];
   const head = "a".repeat(40);
-  const valid = { state: "success", enforced: true, reason: "score_meets_threshold", score: 100, threshold: 100,
+  const valid = { state: "success", enforced: true, managedCheck: true, reason: "score_meets_threshold", score: 100, threshold: 100,
     binding: { protocol: "source-image-v1", headSha: head, policyVersion: 1, policyDigest: "b".repeat(64), image: `ghcr.io/example/app@sha256:${"c".repeat(64)}`, validationImage: `ghcr.io/example/tests@sha256:${"d".repeat(64)}` } };
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "hotrod-gate-"));
   try {
@@ -75,7 +79,7 @@ test("the default-branch gate rejects old/malformed/relaxed success responses", 
       return spawnSync("bash", ["-c", fence], { env: { ...process.env, HEAD_SHA: head, out }, encoding: "utf8" }).status;
     };
     assert.equal(run(valid), 0);
-    for (const patch of [{ enforced: false }, { score: 99 }, { threshold: 70 }, { reason: "trivial_waived" }, { binding: undefined },
+    for (const patch of [{ enforced: false }, { managedCheck: undefined }, { managedCheck: false }, { score: 99 }, { threshold: 70 }, { reason: "trivial_waived" }, { binding: undefined },
       ...[{ headSha: "e".repeat(40) }, { protocol: "old" }, { policyDigest: "wrong" }, { image: "ghcr.io/example/app:latest" }, { validationImage: null }].map(p => ({ binding: { ...valid.binding, ...p } }))]) assert.notEqual(run({ ...valid, ...patch }), 0);
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });

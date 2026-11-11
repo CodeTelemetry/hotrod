@@ -3,7 +3,8 @@
 #
 # Asks CodeTelemetry whether the coding session(s) behind this pull request met
 # the workspace's validation policy, then passes or fails on the answer.
-# Require the check "codetelemetry/validation" in branch protection or a ruleset.
+# Require "codetelemetry/current-validation" from the installed CodeTelemetry
+# GitHub App in the ruleset. This Actions job displays the evaluation.
 #
 # Security:
 # - Authenticates with a short-lived OIDC token that GitHub mints for this run.
@@ -56,7 +57,7 @@ jobs:
           HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
           set -uo pipefail
-          if [ "${CODETELEMETRY_ENFORCEMENT_APPROVED:-}" != "source-image-v1" ]; then
+          if [ "${CODETELEMETRY_ENFORCEMENT_APPROVED:-}" != "managed-source-image-v1" ]; then
             echo "::error::Keep this workflow disabled until the source/image rollout passes live acceptance and adversarial review."
             exit 1
           fi
@@ -121,7 +122,7 @@ jobs:
                 if [ "$state" = "success" ]; then
                   # BEGIN SOURCE IMAGE FENCE
                   if ! jq -e --arg head "$HEAD_SHA" '
-                    .enforced == true and .score == 100 and .threshold == 100 and
+                    .enforced == true and .managedCheck == true and .score == 100 and .threshold == 100 and
                     .reason == "score_meets_threshold" and
                     .binding.protocol == "source-image-v1" and .binding.headSha == $head and
                     (.binding.policyVersion | type == "number" and . >= 1 and floor == .) and
@@ -129,7 +130,7 @@ jobs:
                     (.binding.image | type == "string" and test("^[a-z0-9][a-z0-9._:/-]*@sha256:[a-f0-9]{64}$")) and
                     (.binding.validationImage | type == "string" and test("^[a-z0-9][a-z0-9._:/-]*@sha256:[a-f0-9]{64}$"))
                   ' "$out" >/dev/null; then
-                    echo "::error::Strict Hotrod validation lacks current commit, policy and immutable image proof."
+                    echo "::error::Strict Hotrod validation lacks a managed check or current commit, policy and immutable image proof."
                     exit 1
                   fi
                   # END SOURCE IMAGE FENCE

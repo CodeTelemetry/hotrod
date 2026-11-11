@@ -24,16 +24,16 @@ that maintainer validation; missing evidence does not pass automatically.
    **public** gate ID as the repository Actions variable
    `CODETELEMETRY_GATE_ID`. Gate IDs are identifiers; authentication is GitHub
    OIDC. Do not put an ingest key, Signadot key or PAT in the workflow.
-5. Put the reviewed build and gate workflows on the default branch. Apply
-   `.codetelemetry/ruleset.json` after both check names exist. It requires
-   `Build and unit tests` and `codetelemetry/validation` from GitHub Actions,
+5. Put the reviewed build and gate workflows on the default branch. Configure
+   the repository-scoped CodeTelemetry GitHub App and verify its check on a real
+   PR. Use `.codetelemetry/ruleset.json` as a disabled template. Replace the
+   App ID placeholder with the installed App's numeric ID before activation.
+   Require `Build and unit tests` from GitHub Actions and
+   `codetelemetry/current-validation` from the CodeTelemetry App, along with
    an up-to-date branch, one fresh approval, code-owner approval and no bypass
    actors. Changes to workflows, policy and test scripts require the owners in
    CODEOWNERS; configure an additional qualified owner if needed for reviews.
-   Re-enable the staging gate workflow only after its dedicated gate is ready.
-   GitHub's current plan does not support rulesets on this private staging repo.
-   Upgrade for private enforcement, or apply the ruleset as part of publication
-   before allowing merges. Checked-in JSON alone does not enforce a ruleset.
+   Activate the workflow and required check after live acceptance.
 6. Verify same-repository and external-fork PR behavior. On public repositories,
    check Actions event policies admit this no-checkout `pull_request_target`
    workflow and the intended actors. GitHub's announced default event block is
@@ -106,8 +106,8 @@ References: [GitHub Actions execution policies](https://docs.github.com/en/actio
 
 Keep the gate workflow disabled until live acceptance and adversarial review
 pass. The workflow additionally requires the repository variable
-`CODETELEMETRY_ENFORCEMENT_APPROVED=source-image-v1`; leave it absent during rollout.
-A successful response must enforce 100/100 and include protocol `source-image-v1`,
+`CODETELEMETRY_ENFORCEMENT_APPROVED=managed-source-image-v1`; leave it absent during rollout.
+A successful response must confirm the App check, enforce 100/100 and include protocol `source-image-v1`,
 the exact PR head, the current policy digest/version, and immutable application
 and validation image references. Older or relaxed responses fail closed.
 
@@ -128,16 +128,12 @@ it for merges. Maintain owner review of executable tests and policy changes.
 
 ## Changing policy or issuer after activation
 
-GitHub retains a completed check result. Receipt expiry or server-side policy
-and issuer revocation affects the next evaluation; it does not clear an already
-green Actions job. Disabling the workflow or removing its approval variable also
-does not invalidate that completed job.
+Use the Grader publish action and the private issuer configuration command.
+CodeTelemetry removes old App check results from the required context before
+committing either change. If GitHub cannot confirm revocation, the change
+stays blocked. Fresh independent validation and a new gate run are required
+for open PRs to regain the App check under the new configuration.
 
-Before changing the published policy or trusted issuer, pause merges to `main`
-with a temporary rule restricting branch updates. Retain the existing build and
-review protections. Publish only the reviewed configuration, then run fresh
-independent validation and rerun the gate for every open PR, including unchanged
-heads with earlier green checks. Verify each fresh result uses the current head,
-policy digest/version and immutable images before lifting the merge pause.
-Keep merges paused if any PR cannot be revalidated. This procedure is manual;
-automatic invalidation of completed GitHub checks is not implemented.
+The `codetelemetry/validation` Actions job displays the verdict. GitHub
+retains completed jobs, so pin the required check to the App and the
+`codetelemetry/current-validation` name.
