@@ -5,6 +5,10 @@ benchmark. See [CodeTelemetry enforcement](docs/codetelemetry-enforcement.md)
 for the policy, required CI checks, sandbox procedure and activation order.
 Public CI builds and tests; it does not publish images or deploy workloads.
 
+**Grader demo:** [GRADER-DEMO.md](GRADER-DEMO.md) explains the two demo pull
+requests: one fails the CodeTelemetry validation check and one passes it.
+It also covers how the grader decides and where to look.
+
 ## Hot R.O.D. - Rides on Demand
 
 This demo is based on the Jaeger HotROD demo but has 
