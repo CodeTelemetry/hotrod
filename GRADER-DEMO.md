@@ -38,7 +38,8 @@ can't tell them apart; the grader can.
    GitHub OIDC, so no secret is stored in the repository. It asks CodeTelemetry
    for a verdict on the PR's head commit and reports the result as
    `codetelemetry/validation`.
-   - The gate this repository uses requires a score of 70.
+   - The gate that graded #3 and #5 was a shared smoke gate requiring a score
+     of 70.
    - A missing score counts as a failure.
    - Tests must run before the push.
 
@@ -59,8 +60,10 @@ the exact command sequence.
 - Open the `codetelemetry/validation` run. Its summary shows the score and the
   number of sessions that were graded.
 - The **Rules** settings show the ruleset "Hotrod required validation". It
-  requires both checks plus a code-owner approval, and has no bypass actors,
-  so even the repository owner can't merge a failing PR.
+  requires `Build and unit tests` and a code-owner approval, and has no bypass
+  actors. `codetelemetry/validation` is not a required check for now. It will
+  be required again once the stricter gate in
+  [#4](https://github.com/CodeTelemetry/hotrod/pull/4) has been rehearsed.
 
 **In CodeTelemetry (sign-in required):**
 - The [session timeline](https://codetelemetry.com/dashboards/session-timeline?session=13a5726a-6041-421e-a3c3-515ea6135582)
@@ -76,10 +79,12 @@ the exact command sequence.
 
 **In this repository:**
 - [`.codetelemetry/`](.codetelemetry) holds the intended production policy:
-  `grader.json`, `gate.json` and `ruleset.json`. The demo currently uses a
-  shared smoke gate with a threshold of 70. The checked-in `gate.json`
-  describes a stricter dedicated gate with a threshold of 100 that has not
-  been activated yet.
+  `grader.json`, `gate.json` and `ruleset.json`. The demo PRs were graded by
+  a shared smoke gate with a threshold of 70. The checked-in `gate.json`
+  describes a stricter dedicated gate with a threshold of 100. The repository
+  variable `CODETELEMETRY_GATE_ID` now points at a new gate, set up for that
+  stricter policy. That gate, not the smoke gate, will grade new PRs once the
+  workflow is re-enabled.
 - [`.signadot/codetelemetry-sandbox.yaml`](.signadot/codetelemetry-sandbox.yaml)
   is the sandbox template. It forks `frontend` and `location` onto an image
   built from the tested commit.
@@ -88,7 +93,7 @@ the exact command sequence.
 
 ## Current status
 
-- The gate workflow is **disabled** while the stricter gate binding is being
-  finished. Its checks on #3 and #5 are kept as recorded, and new PRs are not
+- The gate workflow is **disabled** while the stricter gate binding in
+  [#4](https://github.com/CodeTelemetry/hotrod/pull/4) is being finished. Its checks on #3 and #5 are kept as recorded, and new PRs are not
   graded until the workflow is re-enabled.
 - To grade a PR again, re-enable the workflow, then push to the PR or reopen it.
