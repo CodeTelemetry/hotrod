@@ -99,6 +99,8 @@ func (s *Server) listLocations(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	// Locations can be created and deleted at runtime; never serve a stale list.
+	w.Header().Set("Cache-Control", "no-store")
 	w.Write(data)
 }
 
