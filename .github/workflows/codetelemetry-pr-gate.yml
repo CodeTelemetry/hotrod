@@ -107,10 +107,13 @@ jobs:
                 sleep "$wait" ;;
               success|failure|error)
                 details=$(jq -r '.detailsUrl // empty' "$out")
+                # Why a failing verdict failed, one single-line sentence each.
+                why=$(jq -r '(.explanation // [])[:8][] | tostring | gsub("[\r\n]"; " ") | "- " + .[:300]' "$out" 2>/dev/null || true)
                 {
                   echo "### CodeTelemetry PR gate"
                   echo
                   echo "$message"
+                  if [ -n "$why" ]; then echo; echo "$why"; fi
                   if [ -n "$details" ]; then echo; echo "[Open the deciding session]($details)"; fi
                 } >> "$GITHUB_STEP_SUMMARY"
                 if [ "$state" = "success" ]; then
@@ -118,6 +121,7 @@ jobs:
                   exit 0
                 fi
                 echo "::error::$message"
+                if [ -n "$why" ]; then echo "Why:"; echo "$why"; fi
                 exit 1 ;;
               *)
                 echo "::error::CodeTelemetry sent an unexpected answer."
