@@ -56,7 +56,9 @@ func (eta *bestETA) Get(ctx context.Context, dispatchReq *DispatchRequest,
 			span.SetStatus(codes.Error, result.err.Error())
 			return nil, result.err
 		}
-		if result.route.ETA < resp.ETA {
+		// Break equal-ETA ties by driver ID so dispatch is deterministic.
+		if result.route.ETA < resp.ETA ||
+			(result.route.ETA == resp.ETA && result.driverID < resp.DriverID) {
 			resp.ETA = result.route.ETA
 			resp.DriverID = result.driverID
 		}
