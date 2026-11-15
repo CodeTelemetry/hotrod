@@ -5,9 +5,29 @@ benchmark. See [CodeTelemetry enforcement](docs/codetelemetry-enforcement.md)
 for the policy, required CI checks, sandbox procedure and activation order.
 Public CI builds and tests; it does not publish images or deploy workloads.
 
-**Grader demo:** [GRADER-DEMO.md](GRADER-DEMO.md) explains the two demo pull
-requests: one fails the CodeTelemetry validation check and one passes it.
-It also covers how the grader decides and where to look.
+## Grader demo
+
+The CodeTelemetry PR gate asks one question of each pull request: did the AI
+coding agent validate the change before it pushed? Four demo pull requests,
+labelled **DO NOT MERGE - DEMO**, show the answer for two changes. Each change
+was pushed twice with an identical diff, once without validation and once with
+it.
+
+| Change | Pushed without validation | Validated before the push |
+|---|---|---|
+| Break equal-ETA driver ties by driver ID | [#3](https://github.com/CodeTelemetry/hotrod/pull/3) fails, score 0 < 70 | [#10](https://github.com/CodeTelemetry/hotrod/pull/10) passes, score 70 ≥ 70 |
+| Send `Cache-Control: no-store` on the locations list | [#9](https://github.com/CodeTelemetry/hotrod/pull/9) fails, score 0 < 70 | [#5](https://github.com/CodeTelemetry/hotrod/pull/5) passes, score 70 ≥ 70 |
+
+All four pass the ordinary `Build and unit tests` check, so conventional CI
+can't tell the pairs apart. The recorded agent sessions can:
+
+![PR #3 next to PR #10: three calls ending in a push, against sixteen calls that build, test and exercise a Signadot sandbox before the push](docs/grader-demo/pr3-vs-pr10.png)
+
+![PR #9 next to PR #5: an edit, commit and push in 16 seconds, against a full validation run before the push](docs/grader-demo/pr9-vs-pr5.png)
+
+The rows are the tool calls CodeTelemetry recorded for each session, with the
+text shortened for readability. [GRADER-DEMO.md](GRADER-DEMO.md) explains how
+the grader decides and where to look.
 
 ## Hot R.O.D. - Rides on Demand
 
