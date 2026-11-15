@@ -6,7 +6,8 @@ asks one question: before the AI coding agent pushed this commit, did it
 actually validate the change? Code review does not answer that question.
 
 Two pull requests, labelled **DO NOT MERGE - DEMO**, show the two outcomes.
-They should never be merged.
+Each has a twin with the same diff and the opposite outcome. None of the four
+should ever be merged.
 
 | PR | Change | What the agent did before pushing | `codetelemetry/validation` |
 |---|---|---|---|
@@ -15,6 +16,27 @@ They should never be merged.
 
 Both PRs also pass the ordinary `Build and unit tests` check. Conventional CI
 can't tell them apart; the grader can.
+
+## The same change, with and without validation
+
+Each demo PR has a twin that carries an identical diff. The only difference is
+what the agent did before it pushed, so each pair isolates what the grader
+measures.
+
+| Change | Pushed without validation | Validated before the push |
+|---|---|---|
+| Break equal-ETA driver ties by driver ID | [#3](https://github.com/CodeTelemetry/hotrod/pull/3) fails, score 0 < 70 | [#10](https://github.com/CodeTelemetry/hotrod/pull/10) passes, score 70 ≥ 70 |
+| Send `Cache-Control: no-store` on the locations list | [#9](https://github.com/CodeTelemetry/hotrod/pull/9) fails, score 0 < 70 | [#5](https://github.com/CodeTelemetry/hotrod/pull/5) passes, score 70 ≥ 70 |
+
+The screenshots below put the two recorded agent sessions for each pair side
+by side. The rows are the tool calls CodeTelemetry recorded, taken from its
+session replay. For readability the headlines and commands are shortened, a
+step label is added to each row, and model calls and unrelated calls are
+hidden.
+
+![PR #3 next to PR #10: three calls ending in a push, against sixteen calls that build, test and exercise a Signadot sandbox before the push](docs/grader-demo/pr3-vs-pr10.png)
+
+![PR #9 next to PR #5: an edit, commit and push in 16 seconds, against a full validation run before the push](docs/grader-demo/pr9-vs-pr5.png)
 
 ## How the grader works
 
